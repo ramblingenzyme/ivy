@@ -16,7 +16,10 @@ func main() {
 		AddItem("Rip DVD", "", '2', func() {
 			pages.SwitchToPage("rip")
 		}).
-		AddItem("Manage ebooks", "", '3', func() {
+		AddItem("Watch DVD", "", '3', func() {
+			pages.SwitchToPage("watch")
+		}).
+		AddItem("Manage ebooks", "", '4', func() {
 			pages.SwitchToPage("ebooks")
 		})
 
@@ -26,7 +29,8 @@ func main() {
 	pages.
 		AddPage("menu", appGrid(menuFrame), true, true).
 		AddPage("import", importPhotosPage(pages), true, false).
-		AddPage("rip", ripDVDPage(pages), true, false).
+		AddPage("rip", ripDVDPage(pages, app), true, false).
+		AddPage("watch", watchDVDPage(pages, app), true, false).
 		AddPage("ebooks", tview.NewTextView().SetText("Manage ebooks — coming soon"), true, false)
 
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {

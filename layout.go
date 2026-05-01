@@ -1,9 +1,49 @@
 package main
 
 import (
+	"io"
+	"strings"
+	"sync"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
+
+type crWriter struct {
+	mu        sync.Mutex
+	tv        *tview.TextView
+	app       *tview.Application
+	committed strings.Builder
+	current   strings.Builder
+}
+
+func (w *crWriter) Write(p []byte) (n int, err error) {
+	w.mu.Lock()
+	for _, b := range p {
+		switch b {
+		case '\r':
+			w.current.Reset()
+		case '\n':
+			w.committed.WriteString(w.current.String())
+			w.committed.WriteByte('\n')
+			w.current.Reset()
+		default:
+			w.current.WriteByte(b)
+		}
+	}
+	committed := w.committed.String()
+	current := w.current.String()
+	w.mu.Unlock()
+
+	w.app.QueueUpdateDraw(func() {
+		w.tv.SetText(committed + current)
+	})
+	return len(p), nil
+}
+
+func newOutputWriter(tv *tview.TextView, app *tview.Application) io.Writer {
+	return &crWriter{tv: tv, app: app}
+}
 
 func appGrid(content tview.Primitive) *tview.Grid {
 	return tview.NewGrid().
@@ -17,6 +57,9 @@ func outputPane(title string) *tview.TextView {
 		SetScrollable(true).
 		SetDynamicColors(true)
 	tv.SetBorder(true).SetTitle(title)
+	tv.SetChangedFunc(func() {
+		tv.ScrollToEnd()
+	})
 	return tv
 }
 
