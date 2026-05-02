@@ -60,14 +60,15 @@ func watchDVDPage(pages *tview.Pages, app *tview.Application) tview.Primitive {
 	deviceInput := tview.NewInputField().SetLabel("Device").SetText("/dev/sr0")
 
 	form := styledForm().
+		// TODO: add dropdown to choose whether you're playing a real DVD, a disk ISO or a normal movie file
 		AddFormItem(deviceInput).
 		AddButton("Play", func() {
 			device := deviceInput.GetText()
 			app.Suspend(func() {
-				cmd := exec.Command("mpv", "dvd://",
-					"--dvd-device="+device,
-					"--vo=drm",
-					"--hwdec=auto",
+				// Have to pass dvd:// + --dvd-device, otherwise mpv doesn't skip menus/runs into other issues. This applies to DVD ISOs too.
+				cmd := exec.Command(
+					"cage", "-d", "--",
+					"mpv", "dvd://", "--dvd-device="+device,
 				)
 				cmd.Stdin = os.Stdin
 				cmd.Stdout = os.Stdout
