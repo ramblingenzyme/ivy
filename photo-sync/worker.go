@@ -2,17 +2,16 @@ package photosync
 
 import (
 	"io"
-	"os"
 	"os/exec"
 )
 
-func RunPhotofs(path string) os.Cmd, error {
+func RunPhotofs(path string) (*exec.Cmd, error) {
 	cmd := exec.Command("photofs", "--path", path)
 
 	return cmd, cmd.Start()
 }
 
-func Kill(cmd os.Cmd) error {
+func Kill(cmd *exec.Cmd) error {
 	err := cmd.Process.Kill()
 	if err != nil {
 		return err

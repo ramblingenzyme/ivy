@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 
 	dvdrip "github.com/ramblingenzyme/ivy/dvd-rip"
 	"github.com/rivo/tview"
 )
 
-func ripDVDPage(pages *tview.Pages, app *tview.Application) tview.Primitive {
+func ripDVDPage(pages *tview.Pages, app *tview.Application, dvdfsMount string) tview.Primitive {
 	deviceInput := tview.NewInputField().SetLabel("Device").SetText("/dev/sr0")
 	outputInput := tview.NewInputField().SetLabel("Output").SetText("/mnt/nas/movies")
 	ripOutput := outputPane("rip")
@@ -25,26 +24,31 @@ func ripDVDPage(pages *tview.Pages, app *tview.Application) tview.Primitive {
 			go func() {
 				w := newOutputWriter(ripOutput, app)
 
-				dvd, err := dvdrip.DVDInfo(device, w)
+				session, err := dvdrip.NewSession(dvdfsMount)
+				if err != nil {
+					fmt.Fprintf(w, "Error: %v\n", err)
+					return
+				}
+				// defer session.Close()
+
+				dvd, err := session.Info(device, w)
 				if err != nil {
 					fmt.Fprintf(w, "Error: %v\n", err)
 					return
 				}
 				fmt.Fprintf(w, "Title: %s  Main track: %s\n\n", dvd.Title, dvd.MainTrack)
 
-				if err := dvdrip.BackupDVD(device, outputDir, w); err != nil {
+				if err := session.Backup(outputDir, w); err != nil {
 					fmt.Fprintf(w, "Error: %v\n", err)
 					return
 				}
 
-				vocPath := filepath.Join(outputDir, dvd.Title, "VIDEO_TS", fmt.Sprintf("VTS_%s_0.VOB", dvd.MainTrack))
-				mkvPath := filepath.Join(outputDir, dvd.Title+".mkv")
-				if err := dvdrip.MergeMKV(vocPath, mkvPath, w); err != nil {
+				if err := session.MergeMKV(w); err != nil {
 					fmt.Fprintf(w, "Error: %v\n", err)
 					return
 				}
 
-				fmt.Fprintf(w, "Done: %s\n", mkvPath)
+				fmt.Fprintf(w, "Done\n")
 			}()
 		}).
 		AddButton("Cancel", func() { pages.SwitchToPage("menu") })

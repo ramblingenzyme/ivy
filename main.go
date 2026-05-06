@@ -1,11 +1,17 @@
 package main
 
 import (
+	"flag"
+
 	"github.com/gdamore/tcell/v2"
+	dvdrip "github.com/ramblingenzyme/ivy/dvd-rip"
 	"github.com/rivo/tview"
 )
 
 func main() {
+	dvdfsMount := flag.String("dvdfs", dvdrip.MountPath, "dvdfs mount point")
+	flag.Parse()
+
 	app := tview.NewApplication()
 	pages := tview.NewPages()
 
@@ -29,7 +35,7 @@ func main() {
 	pages.
 		AddPage("menu", appGrid(menuFrame), true, true).
 		AddPage("import", importPhotosPage(pages), true, false).
-		AddPage("rip", ripDVDPage(pages, app), true, false).
+		AddPage("rip", ripDVDPage(pages, app, *dvdfsMount), true, false).
 		AddPage("watch", watchDVDPage(pages, app), true, false).
 		AddPage("ebooks", tview.NewTextView().SetText("Manage ebooks — coming soon"), true, false)
 

@@ -48,7 +48,7 @@ func newOutputWriter(tv *tview.TextView, app *tview.Application) io.Writer {
 func appGrid(content tview.Primitive) *tview.Grid {
 	return tview.NewGrid().
 		SetColumns(0, 40, 0).
-		SetRows(-1, 10, -3).
+		SetRows(-2, 30, -2).
 		AddItem(content, 1, 1, 1, 1, 0, 0, true)
 }
 
